@@ -33,13 +33,13 @@ def serial_request ( serial, byte_to_send ):							#send a char to the MCU and r
 
 #-------------------------------------------------------------------------------------------------------------------	
 def separate_string ( input_string ):							# split the string in a list of string
-	value_list = input_string.split(' ')
+	value_list = input_string.split(b' ')
 	return(value_list)
 #-------------------------------------------------------------------------------------------------------------------
 def get_temp_values( ADC_read_list ):							#convert the list of string into the list of the temperatures
 	values_array=[]
 	for i in range(len(ADC_read_list)):
-		if ADC_read_list[i] !='#':								#check and skip the last char 
+		if ADC_read_list[i] !=b'#':								#check and skip the last char 
 			temp = ((2558.66 * ((float(ADC_read_list[i])*5)/1024) )/(5- ((float(ADC_read_list[i])*5)/1024)))-255.866
 			rounded_temp= round(temp,3)
 			values_array.append(rounded_temp)
@@ -51,8 +51,8 @@ def get_pressure_value( ADC_read ):								#convert the string into the pressure
 	return(value)												#return a float
 #-------------------------------------------------------------------------------------------------------------------
 def handle_latchup(serial):										#handle a latch-up event
-	buffer = serial_request (serial, 'l')						#request the total amount of latch-up 
-	if '!' in buffer:
-		buffer = buffer.replace("!","")
-	latchup = separate_string (buffer)
+	buffer = serial_request (serial, b'l')						#request the total amount of latch-up
+	if b'!' in buffer:
+		buffer = buffer.replace(b"!", b"")
+	latchup = [int(item) for item in buffer.split(b' ')]
 	return (latchup)

@@ -1,18 +1,23 @@
 import sys
 import serial
-import Queue
+from multiprocessing import Queue
 import datetime
+import serial.tools.list_ports
 
 from lib_monitor import *
 #-------------------------------------------------------------------------------------------------------------------
 def temperature_request():										# put in the queue the request to read the temperatures				
-	q.put("t")
+	q.put(b"t")
 
 #-------------------------------------------------------------------------------------------------------------------
-q = Queue.Queue()												#define a queue for multi-thread messaging
+
+port = serial.tools.list_ports.comports()[0]
+print(port.description)
+
+q = Queue()												#define a queue for multi-thread messaging
 out_file = open(str(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))+"_test.txt","w")									#open the log file
 try:
-	ser = serial.Serial("../../../../../../../dev/ttyS4")  		#select the serial port
+	ser = serial.Serial('COM3')  		#select the serial port
 	ser.baudrate = 9600 										#set baudrate to 9600bps
 	
 																
@@ -36,7 +41,7 @@ try:
 		
 		if not q.empty():										#if there is a request to the MCU in queue
 			buffer = serial_request (ser, q.get())				#send the command to the MCU and read back the result
-			if '!' in buffer:									#check if meanwhile a letch-up occurred
+			if b'!' in buffer:									#check if meanwhile a letch-up occurred
 				latchup=handle_latchup(ser)						#if yes, handle it and throw away the other information
 				out_file.write(str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))+"\t"+"Latch-up!!"+"\n")
 				print ("Latch-up!!"+"\n")
