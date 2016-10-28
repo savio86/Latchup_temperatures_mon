@@ -85,10 +85,11 @@ void loop() {
        Serial.print('!');}
      digitalWrite( Reset_3_3V_pin, LOW);                    //reset the current monitor device
      digitalWrite( Reset_1_8V_pin,  LOW);                   //reset the current monitor device
-     digitalWrite( Digital_Alert_1_8V_pin, HIGH);           //turn on the 1,8V power
      digitalWrite( Digital_Alert_3_3V_pin, HIGH);           //turn on the 3,3V power
+     digitalWrite( Digital_Alert_1_8V_pin, HIGH);           //turn on the 1,8V power
      digitalWrite(LED_3_3V_pin, LOW);                       //turn off the LED
      digitalWrite(LED_1_8V_pin, LOW);                       //turn off the LED
+     delay (1);                                             //don't change this number
   }
    
   
