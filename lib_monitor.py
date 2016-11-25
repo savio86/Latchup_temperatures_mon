@@ -1,5 +1,7 @@
 from threading import Timer,Thread,Event
 import time
+import os, datetime
+
 #-------------------------------------------------------------------------------------------------------------------
 class perpetualTimer():											#this class define an infinite thread with a timer
 																#each N second call a function
@@ -21,6 +23,32 @@ class perpetualTimer():											#this class define an infinite thread with a t
       self.thread.cancel()
 
 #-------------------------------------------------------------------------------------------------------------------	  
+def setupLogFile(logdir = './data'):
+	# open empty log file, return file name
+	# retrive last runId, add 1, use it for this run and write to file
+	runIdfile = open("runId.cfg", "r")
+	runId = int(runIdfile.readlines()[0]) + 1
+	print("Begin of run %d" % runId)
+	runIdfile = open("runId.cfg", "w+")
+	runIdfile.write("%s" % runId)
+	
+	# build file name Id and string
+	current_id = "%06d_%s" %(runId, str(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')))
+	file_name = os.path.join(logdir, current_id+"_log.txt")	
+	out_file = open(file_name, 'w')
+	out_file.write("# Begin of run %d %s \n" %(runId, current_id))
+	out_file.close()
+	return(file_name)
+	
+def writeLogFile(file_name, file_str):
+	# open file in append mode, write a line and close it
+	out_file = open(file_name, 'a')
+	out_file.write(str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'))+"\t" + file_str +"\n")
+	out_file.close()
+	return(None)
+	
+	
+#-------------------------------------------------------------------------------------------------------------------	  
 def serial_request ( serial, byte_to_send ):							#send a char to the MCU and read back the answer
 	serial.write( byte_to_send )									#write on serial port
 	data_from_serial = 0
@@ -40,7 +68,7 @@ def get_temp_values( ADC_read_list ):							#convert the list of string into the
 	values_array=[]
 	for ADC_read in ADC_read_list:
 		if ADC_read !=b'#':								#check and skip the last char 
-			temp = ((255.866 * (float(ADC_read)/1024) )/(1.- (float(ADC_read)/1024)))-255.866
+			temp = (1./3.9083E-3)*( 1.*(float(ADC_read)/1023)/(1.- (float(ADC_read)/1023)) - 1.)
 			#rounded_temp= round(temp,3)
 			values_array.append(temp)
 	return (values_array)										#return the list of float
