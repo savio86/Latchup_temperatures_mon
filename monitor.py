@@ -3,11 +3,16 @@ import serial
 from multiprocessing import Queue
 import datetime
 import serial.tools.list_ports
+import numpy as np
 
 from lib_monitor import *
 #-------------------------------------------------------------------------------------------------------------------
 def temperature_request():										# put in the queue the request to read the temperatures				
 	q.put(b"t")
+
+#-------------------------------------------------------------------------------------------------------------------
+def current_request():										# put in the queue the request to read the temperatures				
+	q.put(b"c")
 
 #-------------------------------------------------------------------------------------------------------------------
 
@@ -17,7 +22,7 @@ print(port.description)
 q = Queue()												#define a queue for multi-thread messaging
 out_file = open(str(datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))+"_test.txt","w")									#open the log file
 try:
-	ser = serial.Serial('COM3')  		#select the serial port
+	ser = serial.Serial('COM5')  		#select the serial port
 	ser.baudrate = 9600 										#set baudrate to 9600bps
 	
 																
@@ -34,25 +39,34 @@ try:
 		sys.exit()
 	
 	
-	t = perpetualTimer(1 ,temperature_request)					#start the thread that each N seconds asks to the main thread
+	t = perpetualTimer(3, temperature_request)					#start the thread that each N seconds asks to the main thread
 	t.start() 													#to send a request to the MCU
+
+	c = perpetualTimer(10, current_request)					#start the thread that each N seconds asks to the main thread
+	c.start() 													#to send a request to the MCU
 
 	while 1:													#main loop
 		
 		if not q.empty():										#if there is a request to the MCU in queue
-			buffer = serial_request (ser, q.get())				#send the command to the MCU and read back the result
+			q_get = q.get()
+			buffer = serial_request (ser, q_get)				#send the command to the MCU and read back the result
 			if b'!' in buffer:									#check if meanwhile a letch-up occurred
 				latchup=handle_latchup(ser)						#if yes, handle it and throw away the other information
 				out_file.write(str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))+"\t"+"Latch-up!!"+"\n")
 				print ("Latch-up!!"+"\n")
 				print (latchup)									#the first string is referred to the 1.8V and the second to 3.3V
 				out_file.write(str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))+"\t"+str(latchup)+"\n")	
-			else:												
-				values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
-				temperatures = get_temp_values (values)			#convert the string in the value
-				print (temperatures)
-				out_file.write(str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))+"\t"+str(temperatures)+"\n")
-				
+			else:
+				if q_get == b't':
+					values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
+					temperatures = np.array(get_temp_values (values))			#convert the string in the value
+					print ("t:", temperatures.round(2))
+					out_file.write(str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))+"\t"+str(temperatures)+"\n")
+				elif q_get == b'c':
+					values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
+					current = np.array(get_current_value (values))			#convert the string in the value
+					print ("c", current.round(1))
+					out_file.write(str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))+"\t"+str(current)+"\n")
 		byteincoming = ser.inWaiting()							
 		if byteincoming != 0:									#if a byte is incoming w/o any request is a Latch-up event
 			buffer = ser.read(byteincoming)						#read the serial buffer
@@ -65,6 +79,7 @@ try:
 				
 except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		t.cancel()												#close the thread
+		c.cancel()												#close the thread
 		
 		ser.close ()											#close the serial port and exit
 		print ("Serial port " + ser.portstr + " closed"+"\n")

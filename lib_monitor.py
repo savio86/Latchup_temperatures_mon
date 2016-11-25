@@ -38,17 +38,24 @@ def separate_string ( input_string ):							# split the string in a list of stri
 #-------------------------------------------------------------------------------------------------------------------
 def get_temp_values( ADC_read_list ):							#convert the list of string into the list of the temperatures
 	values_array=[]
-	for i in range(len(ADC_read_list)):
-		if ADC_read_list[i] !=b'#':								#check and skip the last char 
-			temp = ((2558.66 * ((float(ADC_read_list[i])*5)/1024) )/(5- ((float(ADC_read_list[i])*5)/1024)))-255.866
-			rounded_temp= round(temp,3)
-			values_array.append(rounded_temp)
+	for ADC_read in ADC_read_list:
+		if ADC_read !=b'#':								#check and skip the last char 
+			temp = ((255.866 * (float(ADC_read)/1024) )/(1.- (float(ADC_read)/1024)))-255.866
+			#rounded_temp= round(temp,3)
+			values_array.append(temp)
 	return (values_array)										#return the list of float
 #-------------------------------------------------------------------------------------------------------------------	
 	
 def get_pressure_value( ADC_read ):								#convert the string into the pressure value
 	value = (float(ADC_read)/9.21) + 10.56
 	return(value)												#return a float
+
+#-------------------------------------------------------------------------------------------------------------------	
+def get_current_value( ADC_read):						#convert the string into the current value
+	# list of 3.3V, 1.8V current in adc values,
+	# return current in mA, gain calibrated by hand
+	return ([0.09108*float(ADC_read[0]), 0.9108*float(ADC_read[1])])
+	
 #-------------------------------------------------------------------------------------------------------------------
 def handle_latchup(serial):										#handle a latch-up event
 	buffer = serial_request (serial, b'l')						#request the total amount of latch-up
