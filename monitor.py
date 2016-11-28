@@ -53,8 +53,7 @@ try:
 			if b'!' in buffer:									#check if meanwhile a letch-up occurred
 				latchup=handle_latchup(ser)						#if yes, handle it and throw away the other information
 				writeLogFile(out_file, "Latch-up!!")
-				print ("Latch-up!!"+"\n")
-				print (latchup)									#the first string is referred to the 1.8V and the second to 3.3V
+				print ("Latch-up!! "+str(latchup)+"\n")			#the first string is referred to the 1.8V and the second to 3.3V
 				writeLogFile(out_file, str(latchup))
 			else:
 				if q_get == b't':
@@ -62,19 +61,20 @@ try:
 					temperatures = np.array(get_temp_values (values))			#convert the string in the value
 					print ("t:", temperatures.round(2))
 					writeLogFile(out_file, "t: "+str(temperatures.round(2)))
+					writeLogFile(out_file, "t r: "+str(values)) # adding raw values
 				elif q_get == b'c':
 					values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
 					current = np.array(get_current_value (values))			#convert the string in the value
 					print ("c", current.round(1))
 					writeLogFile(out_file, "c: "+str(current.round(1)))
+					writeLogFile(out_file, "c r: "+str(values)) # adding raw values
 		byteincoming = ser.inWaiting()							
 		if byteincoming != 0:									#if a byte is incoming w/o any request is a Latch-up event
 			buffer = ser.read(byteincoming)						#read the serial buffer
 			if '!' in buffer:									#check if it is a latch-up 
 				latchup = handle_latchup(ser)					#if yes, handle it
 				writeLogFile(out_file, "Latch-up!!")
-				print ("Latch-up!!"+"\n")
-				print (latchup)									#the first string is referred to the 1.8V and the second to 3.3V
+				print ("Latch-up!! "+str(latchup)+"\n")          #the first string is referred to the 1.8V and the second to 3.3V
 				writeLogFile(out_file, str(latchup) )
 except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		t.cancel()												#close the thread
