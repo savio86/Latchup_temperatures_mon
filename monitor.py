@@ -1,7 +1,7 @@
 import sys
 import serial
 from multiprocessing import Queue
-import datetime
+import datetime, time
 import serial.tools.list_ports
 import numpy as np
 
@@ -19,8 +19,11 @@ def current_request():										# put in the queue the request to read the tempe
 port = serial.tools.list_ports.comports()[0]
 print(port.description)
 
+RECOVERY_TIME = 1. # time for recovery after a latchup, written in Arduino firmware
+
 q = Queue()												#define a queue for multi-thread messaging
 out_file = setupLogFile() # runId is incremented inside this function
+start_time = time.time() # time in seconds
 try:
 	ser = serial.Serial('COM5')  		#select the serial port
 	ser.baudrate = 9600 										#set baudrate to 9600bps
@@ -81,8 +84,16 @@ except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		c.cancel()												#close the thread
 		
 		ser.close ()											#close the serial port and exit
+                elapsed_time = time.time() - start_time
 		print ("Serial port " + ser.portstr + " closed"+"\n")
 		writeLogFile(out_file,  "Serial port " + str(ser.portstr) + " closed")
+                # latchup rate = N_latchup/(Time - N*Recovery_time)
+                latchup_rate = np.array(latchup)
+                latchup_rate = latchup_rate/(elapsed_time - latchup_rate*RECOVERY_TIME) # Hz
+                summary_str = "Run statistics: N latchup= " + str(latchup) +
+                       " Elapsed time= "+ str(elapsed_time) + " Rate=" + str(latchup_rate) + "\n"
+                print ( summary_str)
+                writeLogFile(out_file, summary_str)
 		sys.exit()
 
 
