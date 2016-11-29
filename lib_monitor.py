@@ -68,9 +68,9 @@ def get_temp_values( ADC_read_list ):							#convert the list of string into the
 	values_array=[]
 	for ADC_read in ADC_read_list:
 		if ADC_read !=b'#':								#check and skip the last char 
-			try:
+			if float(ADC_read)<1010:
 				temp = (1./3.9083E-3)*( 1.*(float(ADC_read)/1023)/(1.- (float(ADC_read)/1023)) - 1.)
-			except ZeroDivisionError:
+			else:
 				temp = 9999.
 			values_array.append(temp)
 	return (values_array)										#return the list of float
