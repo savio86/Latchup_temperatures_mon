@@ -84,16 +84,16 @@ except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		c.cancel()												#close the thread
 		
 		ser.close ()											#close the serial port and exit
-                elapsed_time = time.time() - start_time
+		elapsed_time = time.time() - start_time
 		print ("Serial port " + ser.portstr + " closed"+"\n")
 		writeLogFile(out_file,  "Serial port " + str(ser.portstr) + " closed")
-                # latchup rate = N_latchup/(Time - N*Recovery_time)
-                latchup_rate = np.array(latchup)
-                latchup_rate = latchup_rate/(elapsed_time - latchup_rate*RECOVERY_TIME) # Hz
-                summary_str = "Run statistics: N latchup= " + str(latchup) +
-                       " Elapsed time= "+ str(elapsed_time) + " Rate=" + str(latchup_rate) + "\n"
-                print ( summary_str)
-                writeLogFile(out_file, summary_str)
+		# latchup rate = N_latchup/(Time - N*Recovery_time)
+		latchup_rate = np.array(latchup)
+		latchup_rate = latchup_rate/(elapsed_time - latchup_rate*RECOVERY_TIME) # Hz
+		summary_str = "Run statistics: N latchup= " + str(latchup) + \
+			" Elapsed time= "+ str(elapsed_time) + " Rate=" + str(latchup_rate) + "\n"
+		print ( summary_str)
+		writeLogFile(out_file, summary_str)
 		sys.exit()
 
 
