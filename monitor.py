@@ -48,6 +48,7 @@ try:
 	c = perpetualTimer(5, current_request)					#start the thread that each N seconds asks to the main thread
 	c.start() 													#to send a request to the MCU
 
+	latchup = 0
 	while 1:													#main loop
 		
 		if not q.empty():										#if there is a request to the MCU in queue

@@ -82,9 +82,9 @@ def get_pressure_value( ADC_read ):								#convert the string into the pressure
 
 #-------------------------------------------------------------------------------------------------------------------	
 def get_current_value( ADC_read):						#convert the string into the current value
-	# list of 3.3V, 1.8V current in adc values,
+	# list of 1.8V, 3.3V current in adc values,
 	# return current in mA, gain calibrated by hand
-	return ([0.09108*float(ADC_read[0]), 0.9108*float(ADC_read[1])])
+	return ([0.9108*float(ADC_read[0]), 0.09108*float(ADC_read[1])])
 	
 #-------------------------------------------------------------------------------------------------------------------
 def handle_latchup(serial):										#handle a latch-up event
