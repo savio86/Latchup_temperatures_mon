@@ -42,10 +42,10 @@ try:
 		sys.exit()
 	
 	
-	t = perpetualTimer(1, temperature_request)					#start the thread that each N seconds asks to the main thread
+	t = perpetualTimer(10, temperature_request)					#start the thread that each N seconds asks to the main thread
 	t.start() 													#to send a request to the MCU
 
-	c = perpetualTimer(10, current_request)					#start the thread that each N seconds asks to the main thread
+	c = perpetualTimer(5, current_request)					#start the thread that each N seconds asks to the main thread
 	c.start() 													#to send a request to the MCU
 
 	while 1:													#main loop
@@ -74,7 +74,7 @@ try:
 		byteincoming = ser.inWaiting()							
 		if byteincoming != 0:									#if a byte is incoming w/o any request is a Latch-up event
 			buffer = ser.read(byteincoming)						#read the serial buffer
-			if '!' in buffer:									#check if it is a latch-up 
+			if b'!' in buffer:									#check if it is a latch-up 
 				latchup = handle_latchup(ser)					#if yes, handle it
 				writeLogFile(out_file, "Latch-up!!")
 				print ("Latch-up!! "+str(latchup)+"\n")          #the first string is referred to the 1.8V and the second to 3.3V

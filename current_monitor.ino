@@ -81,8 +81,9 @@ void loop() {
      delay(1000);                                           //wait to recover from latch-up
      //Serial.print(latchup_count_1_8);                       //send the number of latch-up on the 1,8V 
     // Serial.print(latchup_count_3_3);                       //send the number of latch-up on the 3,3V 
-     if (Serial.available() > 0){
-       Serial.print('!');}
+    //if (Serial.available() > 0){
+       Serial.print('!');
+       //}
      digitalWrite( Reset_3_3V_pin, LOW);                    //reset the current monitor device
      digitalWrite( Reset_1_8V_pin,  LOW);                   //reset the current monitor device
      digitalWrite( Digital_Alert_3_3V_pin, HIGH);           //turn on the 3,3V power
