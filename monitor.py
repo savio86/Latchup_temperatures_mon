@@ -56,30 +56,30 @@ try:
 			buffer = serial_request (ser, q_get)				#send the command to the MCU and read back the result
 			if b'!' in buffer:									#check if meanwhile a letch-up occurred
 				latchup=handle_latchup(ser)						#if yes, handle it and throw away the other information
-				writeLogFile(out_file, "Latch-up!!")
-				print ("Latch-up!! "+str(latchup)+"\n")			#the first string is referred to the 1.8V and the second to 3.3V
-				writeLogFile(out_file, str(latchup))
+				writeLogFile(out_file, "Latch-up!! N(1.8, 3.3) = (%d, %d) \n" % (latchup[0], latchup[1]))
+				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) \n" % (latchup[0], latchup[1]))			#the first string is referred to the 1.8V and the second to 3.3V
 			else:
 				if q_get == b't':
 					values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
-					temperatures = np.array(get_temp_values (values))			#convert the string in the value
-					print ("t:", temperatures.round(2))
-					writeLogFile(out_file, "t: "+str(temperatures.round(2)))
+					temperatures = get_temp_values (values)			#convert the string in the value
+					print ("t: (DC3.3, ADC, ASIC, DC1.8asic, FPGA) = (%.1f, %.1f, %.1f, %.1f, %.1f)" %\
+						(temperatures[0],temperatures[1],temperatures[2],temperatures[3],temperatures[4]))
+					writeLogFile(out_file, "t: (DC3.3, ADC, ASIC, DC1.8asic, FPGA) = (%.1f, %.1f, %.1f, %.1f, %.1f)" %\
+						(temperatures[0],temperatures[1],temperatures[2],temperatures[3],temperatures[4]))
 					writeLogFile(out_file, "t r: "+str(values)) # adding raw values
 				elif q_get == b'c':
 					values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
-					current = np.array(get_current_value (values))			#convert the string in the value
-					print ("c", current.round(1))
-					writeLogFile(out_file, "c: "+str(current.round(1)))
+					current = get_current_value (values)			#convert the string in the value
+					print ("c (1.8, 3.3) = (%.1f, %.1f)" % (current[0], current[1]))
+					writeLogFile(out_file, "c (1.8, 3.3) = (%.1f, %.1f)" % (current[0], current[1]))
 					writeLogFile(out_file, "c r: "+str(values)) # adding raw values
 		byteincoming = ser.inWaiting()							
 		if byteincoming != 0:									#if a byte is incoming w/o any request is a Latch-up event
 			buffer = ser.read(byteincoming)						#read the serial buffer
 			if b'!' in buffer:									#check if it is a latch-up 
 				latchup = handle_latchup(ser)					#if yes, handle it
-				writeLogFile(out_file, "Latch-up!!")
-				print ("Latch-up!! "+str(latchup)+"\n")          #the first string is referred to the 1.8V and the second to 3.3V
-				writeLogFile(out_file, str(latchup) )
+				writeLogFile(out_file, "Latch-up!! N(1.8, 3.3) = (%d, %d) \n" % (latchup[0], latchup[1]))
+				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) \n" % (latchup[0], latchup[1]))          #the first string is referred to the 1.8V and the second to 3.3V
 except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		t.cancel()												#close the thread
 		c.cancel()												#close the thread
