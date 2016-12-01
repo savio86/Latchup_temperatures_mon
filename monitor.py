@@ -4,6 +4,9 @@ from multiprocessing import Queue
 import datetime, time
 import serial.tools.list_ports
 import numpy as np
+import winsound
+SoundFreq = 3000
+SoundDuration= 300
 
 from lib_monitor import *
 #-------------------------------------------------------------------------------------------------------------------
@@ -48,7 +51,7 @@ try:
 	c = perpetualTimer(5, current_request)					#start the thread that each N seconds asks to the main thread
 	c.start() 													#to send a request to the MCU
 
-	latchup = 0
+	latchup = [0,0,0]
 	while 1:													#main loop
 		
 		if not q.empty():										#if there is a request to the MCU in queue
@@ -59,6 +62,7 @@ try:
 				latchup=handle_latchup(ser)						#if yes, handle it and throw away the other information
 				writeLogFile(out_file, "Latch-up stat: N(1.8, 3.3) = (%d, %d) deltaTime = %d ms \n" % (latchup[0], latchup[1], latchup[2]))
 				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) deltaTime = %d ms\n" % (latchup[0], latchup[1], latchup[2]))			#the first string is referred to the 1.8V and the second to 3.3V
+				winsound.Beep(SoundFreq, SoundDuration)
 			else:
 				if q_get == b't':
 					values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
@@ -82,6 +86,7 @@ try:
 				latchup = handle_latchup(ser)					#if yes, handle it
 				writeLogFile(out_file, "Latch-up stat: N(1.8, 3.3) = (%d, %d) deltaTime = %d ms \n" % (latchup[0], latchup[1], latchup[2]))
 				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) deltaTime = %d ms\n" % (latchup[0], latchup[1], latchup[2]))          #the first string is referred to the 1.8V and the second to 3.3V
+				winsound.Beep(SoundFreq, SoundDuration)
 except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		t.cancel()												#close the thread
 		c.cancel()												#close the thread
@@ -91,7 +96,7 @@ except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		print ("Serial port " + ser.portstr + " closed"+"\n")
 		writeLogFile(out_file,  "Serial port " + str(ser.portstr) + " closed")
 		# latchup rate = N_latchup/(Time - N*Recovery_time)
-		latchup_rate = np.array(latchup)
+		latchup_rate = np.array([latchup[0], latchup[1]])
 		latchup_rate = latchup_rate/(elapsed_time - latchup_rate*RECOVERY_TIME) # Hz
 		summary_str = "Run statistics: N_latchup(1.8, 3.3) = (%d, %d)" % (latchup[0], latchup[1]) + \
 			" Elapsed time= "+ str(elapsed_time) + " Rate=" + str(latchup_rate) + "\n"
