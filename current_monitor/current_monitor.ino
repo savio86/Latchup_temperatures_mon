@@ -31,6 +31,9 @@ int temp=0;
 
 int temperature;
 
+unsigned long timeLastLatchup;
+unsigned long timePrint;
+
 // the setup routine runs once when you press reset:
 void setup() {
 // initialize serial communication at 9600 bits per second:
@@ -70,6 +73,8 @@ void loop() {
      digitalWrite( Digital_Alert_1_8V_pin, LOW);             //shut-down 1,8V power
      digitalWrite( Digital_Alert_3_3V_pin, LOW);             //shut-down 3,3V power
 
+    timeLastLatchup = millis();                                   // store latchup time
+    
     if (Alert_3_3V == LOW){                                 //check if was an overcurrent on 3,3V power net
        latchup_count_3_3 ++;                                //increment the latch-up counter
        digitalWrite(LED_3_3V_pin, HIGH);                    //turn on the LED
@@ -129,13 +134,14 @@ void loop() {
 
     }
     else if (incomingByte == 'l'){                        //if the incoming byte is "l"  
-
+      timePrint = millis() - timeLastLatchup ;
       //Serial.print("Number of latchup on 1.8V: ");      //uncomment this row for debug
       Serial.print(latchup_count_1_8);                  //send the number of latch-up on the 1,8V 
       Serial.print(' ');
       //Serial.print("Number of latchup on 3.3V: ");      //uncomment this row for debug
       Serial.print(latchup_count_3_3);                  //send the number of latch-up on the 3,3V 
-     
+      Serial.print(' ');
+      Serial.print(timePrint);
 
       
     }

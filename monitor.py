@@ -55,9 +55,10 @@ try:
 			q_get = q.get()
 			buffer = serial_request (ser, q_get)				#send the command to the MCU and read back the result
 			if b'!' in buffer:									#check if meanwhile a letch-up occurred
+				writeLogFile(out_file, "Latch-up!!")
 				latchup=handle_latchup(ser)						#if yes, handle it and throw away the other information
-				writeLogFile(out_file, "Latch-up!! N(1.8, 3.3) = (%d, %d) \n" % (latchup[0], latchup[1]))
-				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) \n" % (latchup[0], latchup[1]))			#the first string is referred to the 1.8V and the second to 3.3V
+				writeLogFile(out_file, "Latch-up stat: N(1.8, 3.3) = (%d, %d) deltaTime = %d ms \n" % (latchup[0], latchup[1], latchup[2]))
+				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) deltaTime = %d ms\n" % (latchup[0], latchup[1], latchup[2]))			#the first string is referred to the 1.8V and the second to 3.3V
 			else:
 				if q_get == b't':
 					values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
@@ -77,9 +78,10 @@ try:
 		if byteincoming != 0:									#if a byte is incoming w/o any request is a Latch-up event
 			buffer = ser.read(byteincoming)						#read the serial buffer
 			if b'!' in buffer:									#check if it is a latch-up 
+				writeLogFile(out_file, "Latch-up!!")
 				latchup = handle_latchup(ser)					#if yes, handle it
-				writeLogFile(out_file, "Latch-up!! N(1.8, 3.3) = (%d, %d) \n" % (latchup[0], latchup[1]))
-				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) \n" % (latchup[0], latchup[1]))          #the first string is referred to the 1.8V and the second to 3.3V
+				writeLogFile(out_file, "Latch-up stat: N(1.8, 3.3) = (%d, %d) deltaTime = %d ms \n" % (latchup[0], latchup[1], latchup[2]))
+				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) deltaTime = %d ms\n" % (latchup[0], latchup[1], latchup[2]))          #the first string is referred to the 1.8V and the second to 3.3V
 except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		t.cancel()												#close the thread
 		c.cancel()												#close the thread
@@ -91,7 +93,7 @@ except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		# latchup rate = N_latchup/(Time - N*Recovery_time)
 		latchup_rate = np.array(latchup)
 		latchup_rate = latchup_rate/(elapsed_time - latchup_rate*RECOVERY_TIME) # Hz
-		summary_str = "Run statistics: N latchup= " + str(latchup) + \
+		summary_str = "Run statistics: N_latchup(1.8, 3.3) = (%d, %d)" % (latchup[0], latchup[1]) + \
 			" Elapsed time= "+ str(elapsed_time) + " Rate=" + str(latchup_rate) + "\n"
 		print ( summary_str)
 		writeLogFile(out_file, summary_str)
