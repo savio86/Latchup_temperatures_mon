@@ -77,7 +77,7 @@ def get_temp_values( ADC_read_list ):							#convert the list of string into the
 #-------------------------------------------------------------------------------------------------------------------	
 	
 def get_pressure_value( ADC_read ):								#convert the string into the pressure value
-	value = (float(ADC_read)/9.21) + 10.56
+        value = 10.*((float(ADC_read[0])/9.21) + 10.56) # hPa or mBar
 	return(value)												#return a float
 
 #-------------------------------------------------------------------------------------------------------------------	

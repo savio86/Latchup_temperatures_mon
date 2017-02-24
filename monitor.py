@@ -4,7 +4,7 @@ from multiprocessing import Queue
 import datetime, time
 import serial.tools.list_ports
 import numpy as np
-import winsound
+#import winsound
 SoundFreq = 3000
 SoundDuration= 300
 
@@ -18,6 +18,11 @@ def current_request():										# put in the queue the request to read the tempe
 	q.put(b"c")
 
 #-------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------
+def pressure_request():										# put in the queue the request to read the temperatures				
+	q.put(b"p")
+
+#-------------------------------------------------------------------------------------------------------------------
 
 port = serial.tools.list_ports.comports()[0]
 print(port.description)
@@ -28,7 +33,7 @@ q = Queue()												#define a queue for multi-thread messaging
 out_file = setupLogFile() # runId is incremented inside this function
 start_time = time.time() # time in seconds
 try:
-	ser = serial.Serial('COM5')  		#select the serial port
+	ser = serial.Serial('/dev/ttyACM0')  		#select the serial port
 	ser.baudrate = 9600 										#set baudrate to 9600bps
 	
 																
@@ -48,9 +53,11 @@ try:
 	t = perpetualTimer(10, temperature_request)					#start the thread that each N seconds asks to the main thread
 	t.start() 													#to send a request to the MCU
 
-	c = perpetualTimer(5, current_request)					#start the thread that each N seconds asks to the main thread
-	c.start() 													#to send a request to the MCU
+#	c = perpetualTimer(5, current_request)						#start the thread that each N seconds asks to the main thread
+#	c.start() 													#to send a request to the MCU
 
+	p = perpetualTimer(20, pressure_request)						#start the thread that each N seconds asks to the main thread
+	p.start() 													#to send a request to the MCU
 	latchup = [0,0,0]
 	while 1:													#main loop
 		
@@ -62,7 +69,7 @@ try:
 				latchup=handle_latchup(ser)						#if yes, handle it and throw away the other information
 				writeLogFile(out_file, "Latch-up stat: N(1.8, 3.3) = (%d, %d) deltaTime = %d ms \n" % (latchup[0], latchup[1], latchup[2]))
 				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) deltaTime = %d ms\n" % (latchup[0], latchup[1], latchup[2]))			#the first string is referred to the 1.8V and the second to 3.3V
-				winsound.Beep(SoundFreq, SoundDuration)
+				#winsound.Beep(SoundFreq, SoundDuration)
 			else:
 				if q_get == b't':
 					values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
@@ -78,6 +85,12 @@ try:
 					print ("c (1.8, 3.3) = (%.1f, %.1f)" % (current[0], current[1]))
 					writeLogFile(out_file, "c (1.8, 3.3) = (%.1f, %.1f)" % (current[0], current[1]))
 					writeLogFile(out_file, "c r: "+str(values)) # adding raw values
+				elif q_get == b'p':
+					values = separate_string( buffer )				#if there wasn't , separate the string in a list of values 
+					pressure = get_pressure_value (values)			#convert the string in the value
+					print ("p  = %.1f mbar" % (pressure))
+					writeLogFile(out_file, "p  = %.1f mbar" % (pressure))
+					writeLogFile(out_file, "p r: "+str(values)) # adding raw values
 		byteincoming = ser.inWaiting()							
 		if byteincoming != 0:									#if a byte is incoming w/o any request is a Latch-up event
 			buffer = ser.read(byteincoming)						#read the serial buffer
@@ -86,10 +99,11 @@ try:
 				latchup = handle_latchup(ser)					#if yes, handle it
 				writeLogFile(out_file, "Latch-up stat: N(1.8, 3.3) = (%d, %d) deltaTime = %d ms \n" % (latchup[0], latchup[1], latchup[2]))
 				print ("Latch-up!! N(1.8, 3.3) = (%d, %d) deltaTime = %d ms\n" % (latchup[0], latchup[1], latchup[2]))          #the first string is referred to the 1.8V and the second to 3.3V
-				winsound.Beep(SoundFreq, SoundDuration)
+				#winsound.Beep(SoundFreq, SoundDuration)
 except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		t.cancel()												#close the thread
-		c.cancel()												#close the thread
+		#c.cancel()												#close the thread
+                p.cancel()												#close the thread
 		
 		ser.close ()											#close the serial port and exit
 		elapsed_time = time.time() - start_time
@@ -103,9 +117,3 @@ except (KeyboardInterrupt, SystemExit):							#on ctrl + C signal
 		print ( summary_str)
 		writeLogFile(out_file, summary_str)
 		sys.exit()
-
-
-
-
-
-
